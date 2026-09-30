@@ -1,0 +1,13 @@
+{
+  "name": "swiftserve-rest-api",
+  "version": "1.0.0",
+  "description": "Small in-memory REST API for SwiftServe service requests.",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,186 @@
+openapi: 3.0.3
+info:
+  title: SwiftServe Service Requests API
+  version: 1.0.0
+  description: |-
+    Small REST API for a SwiftServe service-request board. Data is stored only in process memory.
+    Restarting the server clears all records. No real personal data is required.
+servers:
+  - url: http://127.0.0.1:3000
+paths:
+  /api/v1/jobs:
+    get:
+      summary: List service requests
+      parameters:
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/Status'
+          description: Optional status filter.
+      responses:
+        '200':
+          description: Service requests returned.
+    post:
+      summary: Create a service request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJob'
+            example:
+              service: electrical
+              description: Ceiling light needs repair
+              area: Tanke, Ilorin
+      responses:
+        '201':
+          description: Service request created.
+        '400':
+          $ref: '#/components/responses/InvalidJson'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/jobs/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get one service request
+      responses:
+        '200':
+          description: Service request returned.
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      summary: Update a service request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateJob'
+            example:
+              status: accepted
+      responses:
+        '200':
+          description: Service request updated.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      summary: Delete a service request
+      responses:
+        '204':
+          description: Service request deleted. No response body.
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    Status:
+      type: string
+      enum: [pending, accepted, completed, cancelled]
+    Service:
+      type: string
+      enum: [cleaning, laundry, electrical, plumbing, ac-repair, appliance-repair, errand]
+    CreateJob:
+      type: object
+      required: [service, description, area]
+      properties:
+        service:
+          $ref: '#/components/schemas/Service'
+        description:
+          type: string
+          minLength: 10
+          maxLength: 500
+        area:
+          type: string
+          minLength: 2
+          maxLength: 80
+    UpdateJob:
+      type: object
+      minProperties: 1
+      properties:
+        service:
+          $ref: '#/components/schemas/Service'
+        description:
+          type: string
+          minLength: 10
+          maxLength: 500
+        area:
+          type: string
+          minLength: 2
+          maxLength: 80
+        status:
+          $ref: '#/components/schemas/Status'
+    Job:
+      allOf:
+        - $ref: '#/components/schemas/CreateJob'
+        - type: object
+          required: [id, status, createdAt, updatedAt]
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              $ref: '#/components/schemas/Status'
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, details]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: string
+  responses:
+    InvalidJson:
+      description: Malformed JSON request body.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: INVALID_JSON
+              message: Malformed JSON body.
+              details: []
+    ValidationError:
+      description: Request failed input validation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: Request validation failed.
+              details:
+                - service must be one of: cleaning, laundry, electrical, plumbing, ac-repair, appliance-repair, errand.
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: JOB_NOT_FOUND
+              message: No service request exists with id 'missing-id'.
+              details: []

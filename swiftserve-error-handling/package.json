@@ -1,0 +1,12 @@
+{
+  "name": "swiftserve-error-handling-demo",
+  "version": "1.0.0",
+  "description": "Local-only currency converter demonstrating graceful error handling.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

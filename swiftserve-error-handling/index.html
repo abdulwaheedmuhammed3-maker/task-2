@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SwiftServe Local Currency Converter</title>
+  <style>
+    :root {
+      font-family: Inter, system-ui, sans-serif;
+      color: #17221d;
+      background: #f3f7f4;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .card {
+      width: min(520px, 100%);
+      background: white;
+      border: 1px solid #dbe5df;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(18, 59, 42, .08);
+    }
+    h1 { margin-top: 0; color: #123b2a; }
+    p { line-height: 1.5; color: #53645c; }
+    label { display: block; margin: 14px 0 6px; font-weight: 700; }
+    input, select, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 13px;
+      border: 1px solid #ccd9d2;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    button {
+      margin-top: 18px;
+      background: #159a67;
+      color: white;
+      border: 0;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    #message {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #f3f7f4;
+      min-height: 24px;
+    }
+    #result {
+      margin-top: 10px;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #123b2a;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>SwiftServe Local Currency Converter</h1>
+    <p>Demo only: conversion uses a fixed local rate table. No live service is contacted.</p>
+
+    <label for="amount">Amount</label>
+    <input id="amount" type="text" inputmode="decimal" placeholder="e.g. 2500" maxlength="60">
+
+    <div class="row">
+      <div>
+        <label for="from">From</label>
+        <select id="from"></select>
+      </div>
+      <div>
+        <label for="to">To</label>
+        <select id="to"></select>
+      </div>
+    </div>
+
+    <button id="convert">Convert</button>
+    <div id="message" role="alert" aria-live="polite"></div>
+    <div id="result" aria-live="polite"></div>
+  </main>
+
+  <script type="module">
+    import { ALLOWED_CURRENCIES, convertCurrency, safeLog } from './app.js';
+
+    const amount = document.querySelector('#amount');
+    const from = document.querySelector('#from');
+    const to = document.querySelector('#to');
+    const message = document.querySelector('#message');
+    const result = document.querySelector('#result');
+
+    for (const currency of ALLOWED_CURRENCIES) {
+      from.add(new Option(currency, currency));
+      to.add(new Option(currency, currency));
+    }
+
+    from.value = 'NGN';
+    to.value = 'USD';
+
+    document.querySelector('#convert').addEventListener('click', function () {
+      message.textContent = '';
+      result.textContent = '';
+
+      const output = convertCurrency(amount.value, from.value, to.value);
+
+      if (!output.ok) {
+        message.textContent = output.message;
+        safeLog(output.code, 'amount');
+        return;
+      }
+
+      message.textContent = 'Conversion completed.';
+      result.textContent = output.value.toLocaleString() + ' ' + output.to;
+    });
+  </script>
+</body>
+</html>

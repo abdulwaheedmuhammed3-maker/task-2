@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swiftserve-trip-summary"
+version = "1.0.0"
+description = "A small CSV summary tool for SwiftServe trip logs"
+requires-python = ">=3.9"
+
+[project.scripts]
+swiftserve-summary = "swiftserve_summary.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]

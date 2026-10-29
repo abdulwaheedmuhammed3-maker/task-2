@@ -24,10 +24,8 @@ def _normalize_items(items):
     return normalized, round(subtotal, 2)
 
 
-def process_order(items, customer_type="regular", coupon=None, region="local"):
-    """Validate a cart and return a priced order summary."""
-    normalized, subtotal = _normalize_items(items)
-
+def _get_discount_rate(customer_type, coupon, subtotal):
+    """Apply customer and coupon discount rules without stacking discounts."""
     if customer_type not in ("regular", "member", "staff"):
         raise ValueError("unknown customer type")
     discount_rate = 0
@@ -46,8 +44,11 @@ def process_order(items, customer_type="regular", coupon=None, region="local"):
             discount_rate = max(discount_rate, 0.20)
         elif code != "":
             raise ValueError("invalid coupon")
+    return discount_rate
 
-    discount = round(subtotal * discount_rate, 2)
+
+def _calculate_tax_and_shipping(subtotal, discount, region):
+    """Calculate tax, shipping and final total using the original rules."""
     taxable = round(subtotal - discount, 2)
     tax_rate = 0.075 if region in ("local", "nearby") else 0.12
     tax = round(taxable * tax_rate, 2)
@@ -62,6 +63,16 @@ def process_order(items, customer_type="regular", coupon=None, region="local"):
         shipping = 15
 
     total = round(taxable + tax + shipping, 2)
+    return tax, shipping, total
+
+
+def process_order(items, customer_type="regular", coupon=None, region="local"):
+    """Validate a cart and return a priced order summary."""
+    normalized, subtotal = _normalize_items(items)
+    discount_rate = _get_discount_rate(customer_type, coupon, subtotal)
+    discount = round(subtotal * discount_rate, 2)
+    tax, shipping, total = _calculate_tax_and_shipping(subtotal, discount, region)
+
     return {
         "items": normalized,
         "subtotal": subtotal,

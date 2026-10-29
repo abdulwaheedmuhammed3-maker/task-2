@@ -1,5 +1,5 @@
-def process_order(items, customer_type="regular", coupon=None, region="local"):
-    """Validate a cart and return a priced order summary."""
+def _normalize_items(items):
+    """Validate cart input and return normalized lines plus subtotal."""
     if not isinstance(items, list) or len(items) == 0:
         raise ValueError("items must be a non-empty list")
 
@@ -21,7 +21,13 @@ def process_order(items, customer_type="regular", coupon=None, region="local"):
         subtotal += line_total
         normalized.append({"name": name.strip(), "quantity": quantity, "line_total": line_total})
 
-    subtotal = round(subtotal, 2)
+    return normalized, round(subtotal, 2)
+
+
+def process_order(items, customer_type="regular", coupon=None, region="local"):
+    """Validate a cart and return a priced order summary."""
+    normalized, subtotal = _normalize_items(items)
+
     if customer_type not in ("regular", "member", "staff"):
         raise ValueError("unknown customer type")
     discount_rate = 0
